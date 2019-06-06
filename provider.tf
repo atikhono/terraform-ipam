@@ -16,10 +16,17 @@ resource "phpipam_subnet" "subnet" {
   subnet_mask = "24"
 }
 
-resource "phpipam_child_subnet" "child" {
-  subnet_id = "${phpipam_subnet.subnet.subnet_id}"
-  child_subnet_mask = "29"
-  child_subnet_description = "Test child subnet"
+data "phpipam_first_free_subnet" "next_subnet" {
+  master_subnet_id = "${phpipam_subnet.subnet.subnet_id}"
+  subnet_mask = "29"
+}
+
+resource "phpipam_subnet" "child" {
+  section_id = "${phpipam_section.section.section_id}"
+  master_subnet_id = "${phpipam_subnet.subnet.subnet_id}"
+  subnet_address = "${data.phpipam_first_free_subnet.next_subnet.subnet_address}"
+  subnet_mask = "${data.phpipam_first_free_subnet.next_subnet.subnet_mask}"
+  description = "Child subnet for master subnet id=${phpipam_subnet.subnet.subnet_id}"
 }
 
 output "subnet_id" {
@@ -27,5 +34,5 @@ output "subnet_id" {
 }
 
 output "child_subnet_id" {
-  value = "${phpipam_child_subnet.child.subnet_id}"
+  value = "${phpipam_subnet.child.subnet_id}"
 }
